@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Alert,
 } from "react-native";
 import { theme } from "./color";
+import { Fontisto } from "@expo/vector-icons";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -63,6 +65,23 @@ export default function App() {
   //   ...toDos,
   //   [Date.now()]: { text, work: working },
   // };
+  const deleteToDo = (key) => {
+    Alert.alert("Delete To Do", "Are you sure?", [
+      { text: "Cancel" },
+      {
+        text: "I'm sure",
+        style: "destructive",
+        onPress: () => {
+          const newToDos = { ...toDos };
+          delete newToDos[key];
+          // delete 연산자 : 객체의 속성을 제거
+          setToDos(newToDos);
+          saveToDos(newToDos);
+        },
+      },
+    ]);
+    return;
+  };
 
   return (
     <View style={styles.container}>
@@ -102,6 +121,13 @@ export default function App() {
               // 현재 스테이트랑 toDos[key].working이 일치하는 것만 보여줌
               <View style={styles.toDo} key={key}>
                 <Text style={styles.toDoText}>{toDos[key].text}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    deleteToDo(key);
+                  }}
+                >
+                  <Fontisto name="trash" size={18} color="white" />
+                </TouchableOpacity>
               </View>
             ) : null
           )}
@@ -141,6 +167,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   toDoText: {
     fontSize: 16,
