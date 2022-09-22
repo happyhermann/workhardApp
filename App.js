@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,26 +10,49 @@ import {
 } from "react-native";
 import { theme } from "./color";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const STORAGE_KEY = "@toDos";
+
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
-  //example:  object assign({}, toDos, {[Date.now()]:{wrok:true}})
+  useEffect(() => {
+    loadToDos();
+  }, []);
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload) => setText(payload);
-  const addToDo = () => {
+  const saveToDos = async (toSave) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    // stringfy = object => string
+  };
+  const loadToDos = async () => {
+    const s = await AsyncStorage.getItem(STORAGE_KEY);
+    s !== null ? setToDos(JSON.parse(s)) : null;
+    // parse = string => object
+    // 처음에 입력값이 없을 때 Object.keys(toDos)에서 에러가 발생해서 수정함
+  };
+
+  // persist in storage
+
+  //setItem은 Promise return
+
+  const addToDo = async () => {
     if (text === "") {
       return;
     }
     // save to do
     const newToDos = Object.assign({}, toDos, {
-      [Date.now()]: { text, work: working },
+      [Date.now()]: { text, working },
       // 3개의 object를 결합하기 위한 object assign
       // 첫 번째 {} = target Object
       // 그 다음 이전 toDo를 새로운 toDo로 합침
     });
+
     setToDos(newToDos);
+    await saveToDos(newToDos);
     setText("");
     // 리셋
   };
@@ -73,11 +96,15 @@ export default function App() {
           style={styles.input}
         />
         <ScrollView>
-          {Object.keys(toDos).map((key) => (
-            <View style={styles.toDo} key={key}>
-              <Text style={styles.toDoText}>{toDos[key].text}</Text>
-            </View>
-          ))}
+          {/* Object.keys() : 객체의 Key값만 가져오는 것 */}
+          {Object.keys(toDos).map((key) =>
+            toDos[key].working === working ? (
+              // 현재 스테이트랑 toDos[key].working이 일치하는 것만 보여줌
+              <View style={styles.toDo} key={key}>
+                <Text style={styles.toDoText}>{toDos[key].text}</Text>
+              </View>
+            ) : null
+          )}
         </ScrollView>
       </View>
     </View>
@@ -106,9 +133,18 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginTop: 20,
     fontSize: 18,
+    marginVertical: 20,
   },
-  toDo: {},
+  toDo: {
+    backgroundColor: theme.grey,
+    marginBottom: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+  },
   toDoText: {
+    fontSize: 16,
+    fontWeight: "500",
     color: "white",
   },
 });
