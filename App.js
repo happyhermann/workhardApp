@@ -15,6 +15,7 @@ import { Fontisto } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = "@toDos";
+const STATE_KEY = "@working";
 
 export default function App() {
   const [working, setWorking] = useState(true);
@@ -22,9 +23,33 @@ export default function App() {
   const [toDos, setToDos] = useState({});
   useEffect(() => {
     loadToDos();
+    loadState();
   }, []);
-  const travel = () => setWorking(false);
-  const work = () => setWorking(true);
+
+  const saveState = async (saveWork) => {
+    await AsyncStorage.setItem(STATE_KEY, JSON.stringify(saveWork));
+  };
+
+  const loadState = async () => {
+    const v = await AsyncStorage.getItem(STATE_KEY);
+    setWorking(JSON.parse(v));
+  };
+
+  // Work / Travel 섹션 기억하기 (boolean)
+
+  console.log("log out please ");
+
+  const travel = () => {
+    setWorking(false);
+    saveState(false);
+  };
+  const work = () => {
+    setWorking(true);
+    saveState(true);
+  };
+
+  // 여기 있는 함수를 이용해야한다.
+
   const onChangeText = (payload) => setText(payload);
   const saveToDos = async (toSave) => {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
